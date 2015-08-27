@@ -11,109 +11,142 @@ subtitle: Developer guide
 {{site.project_title}} supports extending custom element prototypes with 
 shared code modules called _behaviors_.
 
-A behavior is an object that looks similar to a typical
-{{site.project_title}} prototype.  A behavior can define [lifecycle callbacks
-](registering-elements.html#basic-callbacks),  [declared
-properties](properties.html), [default attributes](registering-elements.html#host-attributes),
+A behavior is similar to a typical mixin, but it can also define
+[lifecycle callbacks](registering-elements.html#basic-callbacks),  [declared
+properties](properties.html), [default attributes](registering-elements.html#host-attributes)[dart issue](https://github.com/dart-lang/polymer-dart/issues/561),
 [`observers`](properties.html#observing-changes-to-multiple-properties), and [`listeners`](events.html#event-listeners).
 
-To add a behavior to a {{site.project_title}} element definition, include it in a
-`behaviors` array on the prototype. 
+To add a behavior to a {{site.project_title}} element definition, include it as
+a mixin on your element class.
 
-    Polymer({
-      is: 'super-element',
-      behaviors: [SuperBehavior]
-    });
+    @jsProxyReflectable
+    @PolymerRegister('super-element')
+    class SuperElement extends PolymerElement with SuperBehavior {
+      SuperElement.created() : super.created();
+    }
 
-Lifecycle callbacks are called on the base prototype first, then for each
-behavior in the order given in the `behaviors` array.
+Lifecycle callbacks are called on the element class first, then for each
+behavior in the order they are mixed in (left to right).
 
-Any non-lifecycle functions on the behavior object are mixed into
-the base prototype. These may be useful for adding APIs or implementing 
-observer or event listener callbacks defined by the behavior. **A function
-defined on the prototype always takes precedence over a function defined 
-by a behavior.** If multiple behaviors define the same function, the 
-**last** behavior in the `behaviors` array takes precedence. 
+All the regular mixin rules apply to behaviors.
 
 ## Defining behaviors
 
-To define a behavior, create a JavaScript object that you can reference from your element definition.
-The following example simply adds `HighlightBehavior` to the global scope:
+To define a behavior, create a new abstract class, and annotate it with
+`@behavior`. The following example defines the `HighlightBehavior`:
 
 
-`highlight-behavior.html`:
+`highlight_behavior.dart`:
 
-    <script>
-        HighlightBehavior = {
-    
-          properties: {
-            isHighlighted: {
-              type: Boolean,
-              value: false,
-              notify: true,
-              observer: '_highlightChanged'
-            }
-          },
-          
-          listeners: {
-            click: '_toggleHighlight'
-          },
-          
-          created: function() {
-            console.log('Highlighting for ', this, 'enabled!');
-          },
-    
-          _toggleHighlight: function() {
-            this.isHighlighted = !this.isHighlighted;
-          },
-          
-          _highlightChanged: function(value) {
-            this.toggleClass('highlighted', value);
-          }
-    
-        };
-    </script>
+    @behavior
+    abstract class HighlightBehavior {
+      @Property(notify: true, observer: 'highlightChanged')
+      bool isHighlighted = false;
+      
+      static created(instance) {
+        print('Highlighting for $instance enabled!');
+      }
 
-`my-element.html`:
+      @Listen('click')
+      toggleHighlight(_, __) {
+        set('isHighlighted', !isHighlighted);
+      },
+      
+      @eventHandler
+      highlightChanged(bool newValue, _) {
+        toggleClass('highlighted', newValue);
+      }
 
-    <link rel="import" href="highlight-behavior.html">
+    };
 
-    <script>
-      Polymer({
-        is: 'my-element',
-        behaviors: [HighlightBehavior]
-      });
-    </script>
+`my_element.dart`:
 
-{{site.project_title}} doesn't specify any
-particular method for referencing your behaviors. Behaviors created by the {{site.project_title}}
-team are added to the {{site.project_title}} object. When creating your own behaviors, you should 
-use some other namespace to avoid collisions with future {{site.project_title}} behaviors. For example:
+    import 'highlight_behavior.dart';
 
-    MyBehaviors = MyBehaviors || {};
-    MyBehaviors.HighlightBehavior = { ... }
+    @jsProxyReflectable
+    @PolymerRegister('my-element')
+    class MyElement extends PolymerElement with HighlightBehavior {
+      MyElement.created() : super.created();
+    }
 
 ## Extending behaviors {#extending}
 
-To extend a behavior, or create a behavior that includes an existing behavior, you can define a 
-behavior as an array of behaviors:
+To extend a behavior, or create a behavior that includes an existing behavior,
+you can add the desired behaviors to the `implements` clause of your class. The
+framework will enforce that those classes directly precede your class in the
+mixin list of any polymer element.
 
-    <!-- import an existing behavior -->
-    <link rel="import" href="oldbehavior.html">
+    import 'oldbehavior.dart';
+    
+    @behavior
+    abstract class NewBehavior implements OldBehavior {}
 
-    <script>
-      // Implement the extended behavior
-      NewBehaviorImpl = {
-        // new stuff here 
-      }
+This would enforce the following ordering:
 
-      // Define the behavior
-      NewBehavior = [ OldBehavior, NewBehaviorImpl ]
-    </script>
+    @jsProxyReflectable
+    @PolymerRegister('my-element')
+    class MyElement extends PolymerElement with OldBehavior, NewBehavior {
+      MyElement.created() : super.created();
+    }
+    
+If you would instead like to enforce that another behavior is mixed in after
+your behavior, you can create an `Impl` class, and add that to a dummy behavior
+class which just has an implements clause:
 
-As with the element's `behaviors` array, the rightmost behavior takes precedence over behaviors earlier in the array. 
-In this case, anything defined in `NewBehaviorImpl` takes precedence over anything defined in `OldBehavior`.
+    import 'oldbehavior.dart';
+    
+    @behavior
+    abstract class NewBehaviorImpl {
+      // Actual behavior implementation.
+    }
+    
+    @behavior
+    abstract class NewBehavior implements NewBehaviorImpl, OldBehavior {
+      // Empty, this guy just groups up [NewBehaviorImpl] and [OldBehavior].
+    }
+    
+This would enforce the following ordering:
 
-Naming each element in the behavior array is a good practice, since it allows behaviors to explicitly reference methods 
-on the behaviors they extend (for example, `NewBehaviorImpl` can call to methods on `OldBehavior`). 
+    @jsProxyReflectable
+    @PolymerRegister('my-element')
+    class MyElement extends PolymerElement with
+        NewBehaviorImpl, OldBehavior, NewBehavior {
+      MyElement.created() : super.created();
+    }
 
+The `Impl` class must be public, but you can hide it in an import from your
+`src` directory (which you do not export).
+
+### Using behaviors written in JS {#interop}
+
+You can also use a behavior written in JS. To do this you will need to create a
+new class as before, but add a `@BehaviorProxy` annotation. The argument to
+to the annotation is a const list representing the path from the js global
+context to the js object for the behavior.
+
+So, to create a dart class which references the js object at `My.Behavior`
+you would do the following:
+
+    @BehaviorProxy(const ['My', 'Behavior'])
+    abstract class MyBehavior {}
+    
+If you want to also provide access to properties/methods created by this
+behavior, then add `CustomElementProxy`, to the `implements` clause. This
+will give you access to the `jsElement` property, which can access all fields
+added by the behavior.
+
+Lets say that `My.Behavior` adds a `myString` property, and a `printMyString`
+method. The following would provide access to those:
+
+     @BehaviorProxy(const ['My', 'Behavior'])
+     abstract class MyBehavior implements CustomElementProxy {
+       String get myString => jsElement['myString'];
+       void set myString(String value) {
+        jsElement['myString'] = value;
+       }
+       
+       void printMyString() => jsElement.callMethod('printMyString');
+     }
+     
+This behavior can now be mixed in just like any other, and can co-exist with
+behaviors written in dart.

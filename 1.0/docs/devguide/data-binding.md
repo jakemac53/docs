@@ -64,6 +64,8 @@ To bind to a child element's `textContent`, you can simply include the
 annotation inside the child element. The binding annotation must currently span
 the **entire content** of the tag:
 
+`user_view.html`:
+
     {% raw %}
     <dom-module id="user-view">
 
@@ -72,21 +74,22 @@ the **entire content** of the tag:
           Last: <span>{{lastName}}</span>
         </template>
 
-        <script>
-          Polymer({
-            is: 'user-view',
-            properties: {
-              firstName: String,
-              lastName: String
-            }
-          });
-        </script>
-
     </dom-module>
     {% endraw %}
-
-
-    <user-view first-name="Samuel" last-name="Adams"></user-view>
+    
+`user_view.dart`:
+    
+    @jsProxyReflectable
+    @PolymerElement('user-view')
+    class UserView extends PolymerElement {
+      UserView.created() : super.created();
+      
+      @property
+      String firstName;
+      
+      @property
+      String lastName;
+    }
 
 String concatenation is **not** supported inside a tag, and the tag **can't 
 contain any whitespace**:
@@ -108,24 +111,26 @@ Binding to text content is always one-way, host-to-child.
 
 Binding annotations can also include paths to sub-properties, as shown below:
 
+`main_view.html`:
+
     <dom-module id="main-view">
 
       <template>
         {%raw%}<user-view first="{{user.first}}" last="{{user.last}}"></user-view>{%endraw%}
       </template>
 
-      <script>
-        Polymer({
-          is: 'main-view',
-          properties: {
-            user: Object
-          }
-        });
-      </script>
-
     </dom-module>
-
-
+    
+`main_view.dart`:
+    
+    @jsProxyReflectable
+    @PolymerRegister('user-view')
+    class MainView extends PolymerElement {
+      MainView.created() : super.created();
+      
+      @property
+      User user;
+    }
 
 See [Binding to structured data](#path-binding) for details.
 
@@ -150,25 +155,24 @@ set to `true` (or otherwise send a `<property>-changed` custom event).  (If the
 property being bound does not have the `notify` flag set, only one-way
 (downward) binding will occur.)
 
-3. The child property being bound to must **not** be configured with the `readOnly`
-flag set to true.  (If the child property is `notify: true` and `readOnly:true`,
-and the host binding uses curly-brace syntax, the binding is
-one-way, **upward** (child-to-host).)
+3. The child property being bound to must have a public setter.  (If the child
+property is `notify: true`, only has a getter, and the host binding uses
+curly-brace syntax, the binding is one-way, **upward** (child-to-host).)
 
 Example 1: Two-way binding
 
-    <script>
-      Polymer({
-        is: 'custom-element',
-        properties: {
-          someProp: {
-            type: String,
-            notify: true
-          }
-        }
-      });
-    </script>
-    ...
+`custom_element.dart`:
+
+    @jsProxyReflectable
+    @PolymerRegister('custom-element')
+    class CustomElement extends PolymerElement {
+      CustomElement.created() : super.created();
+      
+      @Property(notify: true);
+      String someProp;
+    }
+    
+`host.html`:
 
     <!-- changes to "value" propagate downward to "someProp" on child -->
     <!-- changes to "someProp" propagate upward to "value" on host  -->
@@ -176,19 +180,18 @@ Example 1: Two-way binding
 
 Example 2: One-way binding (downward)
 
-    <script>
-      Polymer({
-        is: 'custom-element',
-        properties: {
-          someProp: {
-            type: String,
-            notify: true
-          }
-        }
-      });
-    </script>
+`custom_element.dart`:
 
-    ...
+    @jsProxyReflectable
+    @PolymerRegister('custom-element')
+    class CustomElement extends PolymerElement {
+      CustomElement.created() : super.created();
+      
+      @Property(notify: true);
+      String someProp;
+    }
+
+`host.html`:
 
     <!-- changes to "value" propagate downward to "someProp" on child -->
     <!-- changes to "someProp" are ignored by host due to square-bracket syntax -->
@@ -196,58 +199,61 @@ Example 2: One-way binding (downward)
 
 Example 3: One-way binding (downward)
 
-    <script>
+`custom_element.dart`:
 
-      Polymer({
-        is: 'custom-element',
-        properties: {
-          someProp: String    // no notify:true!
-        }
-      });
-
-    </script>
-    ...
+    @jsProxyReflectable
+    @PolymerRegister('custom-element')
+    class CustomElement extends PolymerElement {
+      CustomElement.created() : super.created();
+      
+      @property         // no notify:true!
+      String someProp;
+    }
+    
+`host.html`:
 
     <!-- changes to "value" propagate downward to "someProp" on child -->
-    <!-- changes to "someProp" are not notified to host due to notify:falsey -->
+    <!-- changes to "someProp" are not notified to host due to notify:false -->
     <custom-element some-prop="{%raw%}{{value}}{%endraw%}"></custom-element>
 
 Example 4: One-way binding (upward, child-to-host)
 
-    <script>
-      Polymer({
-        is: 'custom-element',
-        properties: {
-          someProp: {
-              type: String,
-              notify: true,
-              readOnly: true
-            }
-        }
-      });
-    </script>
+`custom_element.dart`:
 
-    ...
+    @jsProxyReflectable
+    @PolymerRegister('custom-element')
+    class CustomElement extends PolymerElement {
+      CustomElement.created() : super.created();
+      
+      String _someProp;
+      
+      @Property(notify: true);
+      String get someProp => _someProp;
+    }
+    
+`host.html`:
 
-    <!-- changes to "value" are ignored by child due to readOnly:true -->
+    <!-- changes to "value" are ignored by child due to it only having a getter -->
     <!-- changes to "someProp" propagate upward to "value" on host  -->
     <custom-element some-prop="{%raw%}{{value}}{%endraw%}"></custom-element>
 
 Example 5: Error / non-sensical state
 
-    <script>
-      Polymer({
-        is: 'custom-element',
-        properties: {
-          someProp: {
-              type: String,
-              notify: true,
-              readOnly: true
-            }
-        }
-      });
-    </script>
-    ...
+`custom_element.dart`:
+
+    @jsProxyReflectable
+    @PolymerRegister('custom-element')
+    class CustomElement extends PolymerElement {
+      CustomElement.created() : super.created();
+      
+      String _someProp;
+      
+      @Property(notify: true);
+      String get someProp => _someProp;
+    }
+    
+`host.html`:
+
     <!-- changes to "value" are ignored by child due to readOnly:true -->
     <!-- changes to "someProp" are ignored by host due to square-bracket syntax -->
     <!-- binding serves no purpose -->
@@ -366,9 +372,9 @@ Two-way data-binding and observation of paths in Polymer is achieved using a
 similar strategy to the one described above for [2-way property binding
 ](#property-notification): 
 
-1.  When a sub-property of a property configured with
-    `type: Object` changes, an element fires a non-bubbling `<property>-changed` DOM
-    event with a `detail.path` value indicating the path on the object that changed.
+1.  When a sub-property of a property changes, an element fires a non-bubbling
+    `<property>-changed` DOM event with a `detail[path]` value indicating the
+    path on the object that changed.
 
 2.  Elements that have registered interest in that object (either via binding or
     change handler) may then take the appropriate action.  
@@ -391,9 +397,11 @@ object's sub-properties directly requires cooperation from the user.
 
 Specifically, Polymer provides two methods that allow such changes to be notified
 to the system: `notifyPath(path, value)` and `set(path, value)`, where `path` is 
-a **string** identifying the path (relative to the host element). 
+a **String** identifying the path (relative to the host element). 
 
 Example:
+
+`custom_element.html`:
 
     <dom-module id="custom-element">
 
@@ -401,36 +409,39 @@ Example:
         <div>{%raw%}{{user.manager.name}}{%endraw%}</div>
       </template>
 
-      <script>
-        Polymer({
-          is: 'custom-element',
-          reassignManager: function(newManager) {
-            this.user.manager = newManager;
-            // Notification required for binding to update!
-            this.notifyPath('user.manager', this.user.manager);
-          }
-        });
-      </script>
-
     </dom-module>
 
+`custom_element.dart`:
 
+    @jsProxyReflectable
+    @PolymerRegister('custom-element')
+    class CustomElement extends PolymerElement {
+      CustomElement.created() : super.created();
+      
+      @property
+      User user;
+      
+      void reassignManager(newManager) {
+        user.manager = newManager;
+        // Notification required for binding to update!
+        this.notifyPath('user.manager', user.manager);
+      }
+    }
 
 Most of the time, `notifyPath` is called directly after an
 assignment, so a convenience function `set` is provided that performs both
 actions:
 
-    reassignManager: function(newManager) {
+    void reassignManager(newManager) {
       this.set('user.manager', newManager);
     }
-
 
 **Note:** Paths do not support array access notation (such as `users[2]`).
 String keys (such as `users[bob]`) can be replaced with dotted paths (`users.bob`).
 But direct bindings to array items by index (`{%raw%}{{array.0}}{%endraw%}`) isn't supported. 
 See [Binding to array items](#array-binding).
 {: .alert .alert-info }
-    
+
 
 ## Expressions in binding annotations
 
@@ -463,28 +474,32 @@ as part of the element's API, or use it elsewhere in the element.
 
 Example:
 
+`x_custom.html`:
+
     <dom-module id="x-custom">
 
       <template>
         My name is <span>{%raw%}{{computeFullName(first, last)}}{%endraw%}</span>
       </template>
 
-      <script>
-        Polymer({
-          is: 'x-custom',
-          properties: {
-            first: String,
-            last: String       
-          },
-          computeFullName: function(first, last) {
-            return first + ' ' + last;
-          }
-          ...
-        });
-      </script>
-
     </dom-module>
 
+`x_custom.dart`:
+
+    @jsProxyReflectable
+    @PolymerRegister('x-custom')
+    class XCustom extends PolymerElement {
+      XCustom.created() : super.created();
+      
+      @property
+      String first;
+      
+      @property
+      String last;
+      
+      @eventHandler
+      String computeFullName(String first, String last) => '$first $last';
+    }
 
 In this case, the span's `textContent` property is bound to the return value 
 of `computeFullName`, which is recalculated whenever `first` or `last` changes.
@@ -492,7 +507,7 @@ of `computeFullName`, which is recalculated whenever `first` or `last` changes.
 ### Dependent properties in computed bindings {#dependent-properties}
 
 Arguments to computing functions may be _dependent properties_, which include
-any of argument types supported by the `observers` object:
+any of argument types supported by the `@Observe` object:
 
 *   simple properties on the current scope
 *   [paths to subproperties](properties.html#observing-path-changes)
@@ -502,10 +517,9 @@ any of argument types supported by the `observers` object:
 For each type of dependent property, the argument _received_ by the computing function is the
 same as that passed to an observer. 
 
-The computing function **is not called until all dependent properties are defined 
-(`!=undefined`)**. So each dependent properties should have a 
-default `value` defined in `properties` (or otherwise be initialized to a 
-non-`undefined` value) to ensure the function value is computed.
+The computing function **is not called until all dependent properties are defined**.
+So each dependent properties should be initialized to a non-`null` value) to ensure
+the function value is computed.
 
 A computed binding's dependent properties are interpreted relative to the current 
 _binding scope_. For example, inside a [template repeater](templates.html#dom-repeat),
@@ -534,23 +548,26 @@ Example:
 
 Finally, if a computed binding has no dependent properties, it is only evaluated once:
 
+`x_custom.html`:
+
     <dom-module id="x-custom">
       <template>
         <span>{%raw%}{{doThisOnce()}}{%endraw%}</span>
       </template>
-
-      <script>
-       Polymer({
-
-         is: 'x-custom',
-
-         doThisOnce: function() {
-           return Math.random();
-         }
-
-       });
-      </script>
     </dom-module>
+
+`x_custom.dart`:
+
+    import 'dart:math';
+
+    @jsProxyReflectable
+    @PolymerRegister('x-custom')
+    class XCustom extends PolymerElement {
+      XCustom.created() : super.created();
+
+      @eventHandler
+      int doThisOnce() => new Random().nextInt();
+    }
 
 ## Binding to array items {#array-binding}
 
@@ -568,7 +585,7 @@ The following example shows to access a property from an array item using a comp
 The computing function needs to be called if the subproperty value changes, 
 _or_ if the array  itself is mutated, so the binding uses a wildcard path, `myArray.*`.
 
-
+`bind_array_element.html`:
     
     <dom-module id="bind-array-element">
 
@@ -577,37 +594,34 @@ _or_ if the array  itself is mutated, so the binding uses a wildcard path, `myAr
         <div>[[arrayItem(myArray.*, 1, 'name')]]</div>
       </template>
 
-      <script>
-        Polymer({
-
-          is: 'binding-test',
-
-          properties: {
-
-            myArray: {
-              type: Array,
-              value: [{ name: 'Bob' }, { name: 'Doug' } ]
-            }
-          },
-         
-          // first argument is the change record for the array change,
-          // change.base is the array specified in the binding
-          arrayItem: function(change, index, path) {
-            // this.get(path, root) returns a value for a path
-            // relative to a root object.
-            return this.get(path, change.base[index]);
-          },
-         
-          ready: function() {
-            // mutate the array
-            this.unshift('myArray', { name: 'Susan' });
-            // change a subproperty
-            this.set('myArray.1.name', 'Rupert');
-          }
-        });
-      </script>
-
     </dom-module>
+    
+`bind_array_element.dart`:
+
+    @jsProxyReflectable
+    @PolymerRegister('bind-array-element')
+    class BindArrayElement extends PolymerElement {
+      BindArrayElement.created() : super.created();
+      
+      @property
+      List myArray = [new User('Bob'), new User('Doug')];
+
+      // first argument is the change record for the array change,
+      // change['base'] is the array specified in the binding
+      @eventHandler
+      String arrayItem(JsObject change, int index, String path) {
+        // this.get(path, root) returns a value for a path
+        // relative to a root object.
+        return this.get(path, change['base'][index]);
+      },
+     
+      void ready() {
+        // mutate the array
+        this.unshift('myArray', new User('Susan'));
+        // change a subproperty
+        this.set('myArray.1.name', 'Rupert');
+      }
+    }
 
 ## Annotated attribute binding {#attribute-binding}
 

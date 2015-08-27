@@ -38,14 +38,6 @@ Shadow DOM rules).
         <div id="child-element">In local DOM!</div>
         <div class="content-wrapper"><content></content></div>
       </template>
-      
-      <script>
-
-          Polymer({
-              is: 'my-element'
-          });
-
-      </script>
 
     </dom-module>
 
@@ -190,15 +182,6 @@ Example:
       <template>
         <span class="title">{%raw%}{{title}}{%endraw%}</span>
       </template>
-      
-      <script>
-        Polymer({
-          is: 'my-toolbar',
-          properties: {
-            title: String
-          },
-        });
-      </script>
 
     </dom-module>
 
@@ -228,10 +211,6 @@ Example usage of `my-toolbar`:
         <my-toolbar class="warning" title="This one is red."></my-toolbar>
       
       </template>
-
-      <script>
-        Polymer({ is: 'my-element'});
-      </script>
 
     </dom-module>
 
@@ -340,10 +319,6 @@ Example usage of `my-toolbar`:
       
       </template>
 
-      <script>
-        Polymer({ is: 'my-element'});
-      </script>
-
     </dom-module>
 
 
@@ -352,7 +327,7 @@ Example usage of `my-toolbar`:
 {{site.project_title}}'s custom property shim evaluates and applies custom property values once
 at element creation time.  In order to have an element (and its subtree) re-
 evaluate custom property values due to dynamic changes such as application of
-CSS classes, etc., call `this.updateStyles()` on the element.
+CSS classes, etc., call `updateStyles()` on the element.
 To update all elements on the page, you can also call `Polymer.updateStyles()`.
 
 The user can also directly modify a {{site.project_title}} element's custom property by setting
@@ -360,6 +335,8 @@ key-value pairs in `customStyle` on the element (analogous to setting `style`)
 and then calling `updateStyles()`.
 
 Example:
+
+`x_custom.html`:
 
     <dom-module id="x-custom">
 
@@ -373,18 +350,22 @@ Example:
         <my-toolbar>My awesome app</my-toolbar>
         <button on-tap="changeTheme">Change theme</button>
       </template>
-      
-      <script>
-        Polymer({
-          is: 'x-custom',
-          changeTheme: function() {
-            this.customStyle['--my-toolbar-color'] = 'blue';
-            this.updateStyles();
-          }
-        });
-      </script>
 
     </dom-module>
+    
+`x_custom.dart`:
+
+    @jsProxyReflectable
+    @PolymerRegister('x-custom')
+    class XCustom extends PolymerElement {
+      XCustom.created() : super.created();
+      
+      @eventHandler
+      void changeTheme([_, __]) {
+        customStyle['--my-toolbar-color'] = 'blue';
+        updateStyles();
+      }
+    }
 
 ### Custom Properties Shim - Limitations and API details
 
@@ -426,9 +407,9 @@ dynamism will continue to be explored.
 
 *   Re-evaluation of custom property styles does not currently occur as a result
     of changes to the DOM.  Re-evaluation can be forced by calling
-    `this.updateStyles()` on a Polymer element (or `Polymer.updateStyles()` to
+    `updateStyles()` on a Polymer element (or `Polymer.updateStyles()` to
     update all element styles).  For example, if class `b` was added to `x-foo`
-    above, the scope must call `this.updateStyles()` to apply the styling. This
+    above, the scope must call `updateStyles()` to apply the styling. This
     re-calcs/applies styles down the tree from this point.
 
 *   Dynamic effects are reflected at the point of a variable’s application, but not its definition.
@@ -446,7 +427,7 @@ dynamism will continue to be explored.
 
     However, the shim does not currently support dynamism at the point of
     *definition* of a custom property.  In the following example,
-    `this.updateStyles()` would be required to update the value of `--title-
+    `updateStyles()` would be required to update the value of `--title-
     background` being applied to `#title` when the `highlighted` class was added
     or removed.
 
@@ -488,11 +469,7 @@ dynamism will continue to be explored.
            <div class="container">
              <div class="child">I will be red</div>
            </div>
-          </template>
-
-          <script>
-            Polymer({ is: 'my-element'});
-          </script>         
+          </template>      
 
         </dom-module>
    

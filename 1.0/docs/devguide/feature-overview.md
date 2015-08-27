@@ -19,6 +19,8 @@ to make it easier and faster to make custom elements that work like standard DOM
 
 A basic {{site.project_title}} element definition looks like this:
 
+`element_name.html`:
+
     <dom-module id="element-name">
 
       <style>
@@ -31,25 +33,24 @@ A basic {{site.project_title}} element definition looks like this:
         <div>{%raw%}{{greeting}}{%endraw%}</div> <!-- data bindings in local DOM -->
       </template>
 
-      <script>
-        // element registration
-        Polymer({
-          is: "element-name",
-
-          // add properties and methods on the element's prototype
-
-          properties: {
-            // declare properties for the element's public API
-            greeting: {
-              type: String,
-              value: "Hello!"
-            }
-          }
-        });
-      </script>
-
     </dom-module>
 
+`element_name.dart`:
+
+    @HtmlImport('element_name.html');
+    library my_package.element_name;
+    
+    import 'package:polymer/polymer.dart';
+    import 'package:web_components/web_components.dart' show HtmlImport;
+
+    @jsProxyReflectable
+    @PolymerRegister('element_name')
+    class ElementName extends PolymerElement {
+      ElementName.created() : super.created();
+      
+      @property
+      String greeting = 'Hello!';
+    }
 
 
 This guide divides the features into the following groups:
@@ -81,8 +82,6 @@ This guide divides the features into the following groups:
 
 If you're migrating an existing 0.5 element to the new APIs, see the [Migration guide](../migration.html)
 for advice.
-
-If you're upgrading from the 0.8 release, see the [Release notes](../release-notes.html).
 
 
 

@@ -13,3 +13,4 @@ _site
 _data/versions
 .bundle
 summit/dist
+.idea

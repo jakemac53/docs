@@ -32,6 +32,8 @@ that extends the built-in `<template>` element, so it is written as `<template i
 
 Example:
 
+`employee_list.html`
+
     {% raw %}
     <dom-module id="employee-list">
       <template>
@@ -45,32 +47,43 @@ Example:
 
       </template>
 
-      <script>
-        Polymer({
-          is: 'employee-list',
-          ready: function() {
-            this.employees = [
-                {first: 'Bob', last: 'Smith'},
-                {first: 'Sally', last: 'Johnson'},
-                ...
-            ];
-          }
-        });
-      </script>
-
     </dom-module>
     {% endraw %}
+    
+`employee_list.dart`:
+
+    @jsProxyReflectable
+    @PolymerRegister('employee-list')
+    class EmployeeList extends PolymerElement {
+      EmployeeList.created() : super.created();
+      
+      @property
+      List<Employee> employees;
+      
+      void ready() {
+        set('employees', [
+          new Employee('Bob', 'Smith'),
+          new Employee('Sally', 'Johnson'),
+        ]);
+      }
+    }
+    
+    @jsProxyReflectable
+    class Employee extends JsProxy {
+      String first;
+      String last;
+      Employee(this.first, this.last);
+    }
 
 Notifications for changes to items sub-properties are forwarded to the template
 instances, which update via the normal [structured data notification system
 ](#path-binding).
 
-Mutations to the `items` array itself (`push`, `pop`, `splice`, `shift`,
-`unshift`) must be performed using methods provided on Polymer elements, such
-that the changes are observable to any elements bound to the same array in the
-tree. For example:
+Mutations to the `items` list itself must be performed using methods provided on
+Polymer elements, such that the changes are observable to any elements bound to
+the same list in the tree. For example:
 
-    this.push('employees', { first: 'Jack', last: 'Aubrey' });
+    add('employees', new Employee('Jack', 'Aubrey'));
 
 ### Handling events in `dom-repeat` templates {#handling-events}
 
@@ -82,6 +95,8 @@ When you add a declarative event handler **inside** the `<dom-repeat>` template,
 the repeater adds a `model` property to each event sent to the listener. The `model` 
 is the scope data used to generate the template instance, so the item
 data is `model.item`:
+
+`simple_menu.html`:
 
     {% raw %}
     <dom-module id="simple-menu">
@@ -96,33 +111,43 @@ data is `model.item`:
         </template>
       </template>
 
-      <script>
-        Polymer({
-          is: 'simple-menu',
-          ready: function() {
-            this.menuItems = [
-                { name: "Pizza", ordered: 0 },
-                { name: "Pasta", ordered: 0 },
-                { name: "Toast", ordered: 0 }
-            ];
-          },
-          order: function(e) {
-            var model = e.model;
-            model.set('item.ordered', model.item.ordered+1);
-          }
-        });
-      </script>
-
     </dom-module>
     {% endraw %}
+    
+`simple_menu.dart`:
 
-The `model` is an instance of `Polymer.Base`, so `set`, `get` and the array
-manipulation methods are all available on the `model` object, and should be used
-to manipulate the model.
+    @jsProxyReflectable
+    @PolymerRegister('simple_menu')
+    class SimpleMenu extends PolymerElement {
+      SimpleMenu.created() : super.created();
+      
+      @property
+      List<MenuItem> menuItems;
+      
+      void ready() {
+        set('menuItems', [
+          new MenuItem('Pizza', 0),
+          new MenuItem('Pasta', 0),
+          new MenuItem('Toast', 0),
+        ]);
+      }
+      
+      void order(e, [_]) {
+        // Have to use js interop to access this today, see
+        // https://github.com/dart-lang/polymer-dart/issues/563
+        var e = new JsObject.fromBrowserObject(e);
+        var model = e['model'];
+        model.callMethod('set', ['item.ordered', model['item']['ordered'] + 1]);
+      }
+    }
+
+The `model` is an instance of the js `Polymer.Base` object, so `set`, `get` and
+the js array manipulation methods are all available on the `model` object, and
+should be used to manipulate the model.
 
 **Note:** The `model` property is **not** added for event listeners registered 
-imperatively (using `addEventListener`), or listeners added to one of the
-`<dom-repeat>` template's parent nodes. In these cases, you can use
+imperatively (using `addEventListener`, or `on`), or listeners added to one of 
+the `<dom-repeat>` template's parent nodes. In these cases, you can use
 the `<dom-repeat>` `modelForElement` method to retrieve the 
 model data that generated a given element. (There are also corresponding 
 `itemForElement` and `indexForElement` methods.)
@@ -142,7 +167,7 @@ To filter or sort the _displayed_ items in your list, specify a `filter` or
 In both cases, the value can be either a function object, or a string identifying a 
 function defined on the host element.
 
-By default, the `filter` and `sort` functions only run when the array itself
+By default, the `filter` and `sort` functions only run when the list itself
 is mutated (for example, by adding or removing items).
 
 To re-run the `filter` or `sort` functions when certain sub-fields
@@ -211,6 +236,8 @@ item(s) are kept in sync with items in the `items` array.
 When `multi` is false, `selected` is a property representing the last selected 
 item.  When `multi` is true, `selected` is an array of selected items.
 
+`employee_list.html`:
+
     {% raw %}
     <dom-module id="employee-list">
 
@@ -233,25 +260,42 @@ item.  When `multi` is true, `selected` is an array of selected items.
 
       </template>
 
-      <script>
-        Polymer({
-          is: 'employee-list',
-          ready: function() {
-            this.employees = [
-                {first: 'Bob', last: 'Smith'},
-                {first: 'Sally', last: 'Johnson'},
-                ...
-            ];
-          },
-          toggleSelection: function(e) {
-            var item = this.$.employeeList.itemForElement(e.target);
-            this.$.selector.select(item);
-          }
-        });
-      </script>
-
     </dom-module>
     {% endraw %}
+    
+`employee_list.dart`:
+    
+    @jsProxyReflectable
+    @PolymerRegister('employee-list')
+    class EmployeeList extends PolymerElement {
+      EmployeeList.created() : super.created();
+      
+      @property
+      List<Employee> employees;
+      
+      void ready() {
+        set('employees', [
+          new Employee('Bob', 'Smith');
+          new Employee('Sally', 'Johnson');
+        ]);
+      }
+      
+      @eventHandler
+      void toggleSelection(e, target) {
+        // Have to use js interop to use this today, see
+        // https://github.com/dart-lang/polymer_interop/issues/7
+        var item = $['employeeList'].callMethod('itemForElement', [e.target])
+        $['selector'].callMethod('select', [item]);
+      }
+    }
+    
+    @jsProxyReflectable
+    class Employee extends JsProxy {
+      String first;
+      String last;
+      
+      Employee(this.first, this.last);
+    }
 
 
 ## Conditional templates {#dom-if}
@@ -272,6 +316,8 @@ guidance on recommended usage of conditional templates.
 
 Example:
 
+`user_page.html`:
+
     {% raw %}
     <dom-module id="user-page">
 
@@ -287,19 +333,20 @@ Example:
 
       </template>
 
-      <script>
-        Polymer({
-          is: 'user-page',
-          properties: {
-            user: Object
-          }
-        });
-      </script>
-
     </dom-module>
     {% endraw %}
 
+`user_page.dart`:
 
+    @jsProxyReflectable
+    @PolymerRegister('user-page')
+    class UserPage extends PolymerElement {
+      UserPage.created() : super.created();
+      
+      @property
+      User user;
+    }
+    
 Since it is generally much faster to hide and show elements rather than
 destroy and recreate them, conditional templates are only useful to save initial
 creation cost when the elements being stamped are relatively heavyweight and the

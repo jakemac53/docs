@@ -26,30 +26,45 @@ To opt-in to using shadow DOM where available, see [Global settings](settings.ht
 ## Local DOM template {#template-stamping}
 
 To specify DOM to use for an element's local DOM, use the `<dom-module>` element.
-Give the `<dom-module>` an `id` attribute that matches its element's
-`is` property and put a `<template>` inside the `<dom-module>`.
-Polymer will automatically clone this template's contents into the element's local DOM.
+Give the `<dom-module>` an `id` attribute that matches the first argument to the
+`@PolymerRegister(...)` annotation on the elements class, and put a `<template>`
+ inside the `<dom-module>`. Polymer will automatically clone this template's
+ contents into the element's local DOM.
 
 Example:
+
+`x_foo.html`:
 
     <dom-module id="x-foo">
 
       <template>I am x-foo!</template>
 
-      <script>
-        Polymer({
-          is: 'x-foo'
-        });
-      </script>
-
     </dom-module>
 
+`x_foo.dart`:
+    @HtmlImport('x_foo.html')
+    library x_foo;
+    
+    import 'package:polymer/polymer.dart';
+    import 'package:web_components/web_components.dart';
+
+    @jsProxyReflectable
+    @PolymerRegister('x-foo')
+    class XFoo extends PolymerElement { ... }
 
 
 We say that an element definition has an imperative and declarative portion. The imperative
-portion is the call to `Polymer({...})`, and the declarative portion is the `<dom-module>`
-element. The imperative and declarative portions of an element's definition may be placed
-in the same html file or in separate files.
+portion is dart code, and the declarative portion is the html code which
+contains the `<dom-module>` element. Typically, the html portion will be
+referenced by the dart portion, using an @HtmlImport annotation on the library
+as shown above.
+
+**Note** This is one way that Polymer Dart and Polymer Js differ. In Polymer JS
+everything would typically be driven by html imports in your html files. In
+Polymer Dart it is instead recommended that your dart files import your html
+files using @HtmlImport. It is also recommended that your html files only
+contain html, not script tags. By doing it this way, the entire program is
+reachable from your entry point script (the one with a `main`).
 
 **Note:** Defining an element in the main HTML document is not currently supported.
 {: .alert .alert-info }
@@ -60,16 +75,18 @@ in the same html file or in separate files.
 {{site.project_title}} automatically builds a map of statically created instance nodes 
 in  its local DOM, to provide convenient access to frequently used nodes without
 the need to query for them manually.  Any node specified in the
-element's template with an `id` is stored on the `this.$` hash by `id`.
+element's template with an `id` is stored on the `$` map by `id`.
 
 **Note:** Nodes created dynamically using data binding (including those in 
 `dom-repeat` and `dom-if` templates) are _not_ added to the
-`this.$` hash. The hash includes only _statically_ created local DOM nodes
+`$` map. The map includes only _statically_ created local DOM nodes
 (that is, the nodes defined in the element's outermost template).
 {: .alert .alert-warning }
 
 
 Example:
+
+`x_custom.html`:
 
     <dom-module id="x-custom">
 
@@ -77,28 +94,24 @@ Example:
         Hello World from <span id="name"></span>!
       </template>
 
-      <script>
-
-        Polymer({
-
-          is: 'x-custom',
-
-          ready: function() {
-            this.$.name.textContent = this.name;
-          }
-
-        });
-
-      </script>
-
     </dom-module>
 
+`x_custom.dart`:
   
+    @jsProxyReflectable
+    @PolymerRegister('x-custom')
+    class XCustom extends PolymerElement {
+      XCustom.created() : super.created();
+      
+      void ready() {
+        $['name'].text = name;
+      }
+    }
 
 For locating dynamically-created nodes in your element's local DOM, use the `$$` 
 method:
 
-<code>this.$$(<var>selector</var>)</code>
+<code>$$(<var>selector</var>)</code>
 
 `$$` returns the first node in the local DOM that matches <code><var>selector</var></code>.
 
@@ -129,7 +142,7 @@ The document's DOM tree is effectively the composed tree.
 
 Polymer provides a custom API for manipulating DOM such that local DOM and light DOM trees are properly maintained. These methods
 and properties have the same signatures as their standard DOM equivalents, except that properties and methods 
-that return a list of nodes return an `Array`, not a `NodeList`.
+that return a list of nodes return an `List`, not a `NodeList`.
 
 **Note:** All DOM manipulation must use this API, as opposed to DOM API directly on nodes.
 {: .alert .alert-error }
@@ -138,14 +151,14 @@ The following methods and properties are provided.
 
 Adding and removing children:
 
-*   `Polymer.dom(parent).appendChild(node)`
+*   `Polymer.dom(parent).append(node)`
 *   `Polymer.dom(parent).insertBefore(node, beforeNode)`
 *   `Polymer.dom(parent).removeChild(node)`
 *   `Polymer.dom.flush()`
 
-Calling `append`/`insertBefore` where `parent` is a custom Polymer element adds the node to the light DOM of the element.  In order to insert/append into the local dom of a custom element, use `this.root` as the parent.
+Calling `append`/`insertBefore` where `parent` is a custom Polymer element adds the node to the light DOM of the element.  In order to insert/append into the local dom of a custom element, use `root` as the parent.
 
- **Async operations:** The insert, append, and remove operations are transacted lazily in certain cases for performance.  In order to interrogate the dom (e.g. `offsetHeight`, `getComputedStyle`, etc.) immediately after one of these operations, call `Polymer.dom.flush()` first.
+ **Async operations:** The insert, append, and remove operations are transacted lazily in certain cases for performance.  In order to interrogate the dom (e.g. `offsetHeight`, `getComputedStyle`, etc.) immediately after one of these operations, call `PolymerDom.flush()` first.
 {: .alert .alert-info }
 
 Parent and child APIs:
@@ -158,8 +171,8 @@ Parent and child APIs:
   * `Polymer.dom(node).lastElementChild`
   * `Polymer.dom(node).previousSibling`
   * `Polymer.dom(node).nextSibling`
-  * `Polymer.dom(node).textContent`
-  * `Polymer.dom(node).innerHTML`
+  * `Polymer.dom(node).text`
+  * `Polymer.dom(node).innerHtml`
 
 Query selector:
 
@@ -189,7 +202,7 @@ Some examples of using the `Polymer.dom`.
 Add a child to the light DOM:
 
     var toLight = document.createElement('div');
-    Polymer.dom(this).appendChild(toLight);
+    Polymer.dom(this).append(toLight);
 
 Insert a child into the local DOM:
 
@@ -213,7 +226,7 @@ You can use `Polymer.dom` on any node, whether or not it has a local DOM tree:
     ...
 
     var insert = document.createElement('div');
-    Polymer.dom(this.$.container).insertBefore(insert, this.$.first);
+    Polymer.dom($['container']).insertBefore(insert, $['first']);
 
 Sometimes it's necessary to access the elements which have been distributed to a given `<content>` insertion point or to know to which `<content>` a given node has been distributed. The `getDistributedNodes` and `getDestinationInsertionPoints` methods, respectively, provide this information:
 
@@ -234,8 +247,8 @@ Sometimes it's necessary to access the elements which have been distributed to a
     var insertedTo = Polymer.dom(div).getDestinationInsertionPoints()[0];
 
     // the following should be true:
-    assert.equal(distributed, div);
-    assert.equal(insertedTo, content)
+    assert(distributed == div);
+    assert(insertedTo == content)
 
 
 

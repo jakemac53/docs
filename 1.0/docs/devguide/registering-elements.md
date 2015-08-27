@@ -12,82 +12,63 @@ subtitle: Developer guide
 ## Register a custom element {#register-element}
 
 
-To register a custom element, use the `Polymer` function, and pass in the
-prototype for the new element. The prototype must have an `is` property that
-specifies the HTML tag name for your custom element.
+To register a custom element, use the `PolymerRegister` annotation on a class,
+and pass in the tag name for the new element. The class must extend either
+`PolymerElement` or a native html element class. See
+[type-extension](#type-extension) for more info on extending native elements.
 
 By specification, the custom element's name **must contain a dash (-)**. 
 
+You must also call `initPolymer` at some point in your program, which will
+find all the annotations and do the actual registration.
+
 Example:
 
-    // register an element
-    MyElement = Polymer({
-
-      is: 'my-element',
-
-      // See below for lifecycle callbacks
-      created: function() {
-        this.textContent = 'My element!';
+    @jsProxyReflectable
+    @PolymerRegister('my-element')
+    class MyElement extends PolymerElement {
+      MyElement.created() : super.created();
+      
+      void ready() {
+        text = `My element!`;
       }
+    }
+    
+    main() async {
+      // Actually registers the elements.
+      await initPolymer();
 
-    });
+      // create an instance with createElement:
+      var el1 = document.createElement('my-element');
+    }
 
-    // create an instance with createElement:
-    var el1 = document.createElement('my-element');
-
-    // ... or with the constructor:
-    var el2 = new MyElement();
-
-The `Polymer` function registers the element with the browser and returns a
-constructor that can be used to create new instances of your element via code.
-
-The `Polymer` function sets up the prototype chain for your custom element,
-chaining it to the {{site.project_title}} `Base` prototype (which provides
-{{site.project_title}} value-added features), so you cannot set up your own
-prototype chain. However, you can use [prototype mixins](#prototype-mixins) to
-share code between elements.
+Extending other custom elements is not directly supported today, although it may
+work in some cases. If you want to share behavior between elements it is
+recommended that you encapsulate the shared logic in a [behavior](#behaviors),
+which is a special type of mixin class.
 
 ### Define a custom constructor {#custom-constructor}
 
-The `Polymer` method returns a basic constructor that can be used to
-instantiate the custom element. If you want to 
-pass arguments to the constructor to configure the new element, you can 
-specify a custom `factoryImpl` function on the prototype.
-
-The constructor returned from `Polymer` creates an instance using 
-`document.createElement`, then invokes the user-supplied `factoryImpl` function 
-with `this` bound to the element instance. Any arguments passed to the actual
-constructor are passed on to `factoryImpl` function.
+If you want users of your element to be able to do `new MyElement()`, you can
+do that by simply making a factory constructor which calls
+`document.createElement('my-element')`. You can also set up additional state
+if desired.
 
 Example:
 
-    MyElement = Polymer({
+    @jsProxyReflectable
+    @PolymerRegister('my-element')
+    class MyElement extends PolymerElement {
+      MyElement.created() : super.created();
+      
+      factory MyElement() => document.createElement('my-element');
+    }
 
-      is: 'my-element',
+    main() async {
+      await initPolymer();
 
-      factoryImpl: function(foo, bar) {
-        this.foo = foo;
-        this.configureWithBar(bar);
-      },
-
-      configureWithBar: function(bar) {
-        ...
-      }
-
-    });
-
-    var el = new MyElement(42, 'octopus');
-
-
-Two notes about the custom constructor:
-
-*   The `factoryImpl` method is _only_ invoked when you create an element using the 
-    constructor. The `factoryImpl` method is not called if the element is created 
-    from markup by the HTML parser, or if the element is created using `document.createElement`. 
-
-*   The `factoryImpl` method is called **after** the element is initialized (local DOM 
-    created, default values set, and so on). See
-    [Ready callback and element initialization](#ready-method) for more information.
+      MyElement el1 = new MyElement();
+    }
 
 ### Extend native HTML elements {#type-extension}
 
@@ -96,29 +77,34 @@ Polymer currently only supports extending native HTML elements (for example,
 be supported in a future release). These native element extensions are called
 _type extension custom elements_.
 
-To extend a native HTML element, set the `extends` property on your prototype to 
-the tag name of the element to extend.
-
+To extend a native HTML element, extend the native class instead of
+`PolymerElement`, and then mix in all of `PolymerMixin`, `PolymerBase`, and
+`JsProxy`. Then, call `polymerCreated()` inside the `created` constructor.
+You must also supply the tag name in the `extendsTag` named parameter
+of the `PolymerRegister` annotation, but this restriction may go away in the
+future.
 
 Example:
 
-    MyInput = Polymer({
-
-      is: 'my-input',
-
-      extends: 'input',
-
-      created: function() {
-        this.style.border = '1px solid red';
+    @jsProxyReflectable
+    @PolymerRegister('my-input', extendsTag: 'input')
+    class MyInput extends InputElement with
+        PolymerMixin, PolymerBase, JsProxy {
+      MyInput.created() : super.created() {
+        polymerCreated();
       }
+      factory MyInput() => document.createElement('input', 'my-input');
+      
+      void ready() {
+        style.border = '1px solid red';
+      }
+    }
 
-    });
+    main() async {
+      await initPolymer();
 
-    var el1 = new MyInput();
-    console.log(el1 instanceof HTMLInputElement); // true
-
-    var el2 = document.createElement('input', 'my-input');
-    console.log(el2 instanceof HTMLInputElement); // true
+      MyInput el1 = new MyInput();
+    }
 
 To use a type-extension element in markup, use the _native_ tag and add an
 `is` attribute that specifies the extension type name:
@@ -128,87 +114,41 @@ To use a type-extension element in markup, use the _native_ tag and add an
 <!-- legacy anchor -->
 <a id="basic-callbacks"></a>
 
-### Define an element in the main HTML document {#main-document-definitions}
-
-**Note:** You should only define elements from the main document when 
-experimenting. In production, elements should always be defined in 
-separate files and imported into your main document. 
-{: .alert .alert-info }
-
-To define an element in your main HTML document, define the element
-from `HTMLImports.whenReady(callback)`. `callback` is invoked when 
-all imports in the document have finished loading.
-
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <script src="bower_components/webcomponentsjs/webcomponents-lite.js">
-        </script>
-        <link rel="import" href="bower_components/polymer/polymer.html">
-        <title>Defining a Polymer Element from the Main Document</title>
-      </head>
-      <body>
-        <dom-module id="main-document-element">
-          <template>
-            <p>
-              Hi! I'm a Polymer element that was defined in the
-              main document!
-            </p>
-          </template>
-          <script>
-            HTMLImports.whenReady(function () {
-              Polymer({
-                is: 'main-document-element'
-              });
-            });
-          </script>
-        </dom-module>
-        <main-document-element></main-document-element>
-      </body>
-    </html>
-
 ## Lifecycle callbacks {#lifecycle-callbacks}
 
-Polymer's Base prototype implements the standard Custom Element lifecycle
-callbacks to perform tasks necessary for Polymer's built-in features.  The hooks
-in turn call shorter-named lifecycle methods on your prototype.
+Polymer elements can contain all the standard Custom Element lifecycle
+callbacks:
 
-- `created` instead of `createdCallback`
-- `attached` instead of `attachedCallback`
-- `detached` instead of `detachedCallback`
-- `attributeChanged` instead of `attributeChangedCallback`
-
-You can fallback to using the low-level methods if you prefer (in other
-words, you can simply implement `createdCallback` in your prototype).
+- `created`
+- `attached`
+- `detached`
+- `attributeChanged`
 
 Polymer adds an extra callback, `ready`, which is invoked when Polymer has
-finished creating and initializing the element's local DOM.
-
+finished creating and initializing the element's local DOM. I
 
 Example:
 
-    MyElement = Polymer({
-
-      is: 'my-element',
-
-      created: function() {
-        console.log(this.localName + '#' + this.id + ' was created');
-      },
-
-      attached: function() {
-        console.log(this.localName + '#' + this.id + ' was attached');
-      },
-
-      detached: function() {
-        console.log(this.localName + '#' + this.id + ' was detached');
-      },
-
-      attributeChanged: function(name, type) {
-        console.log(this.localName + '#' + this.id + ' attribute ' + name +
-          ' was changed to ' + this.getAttribute(name));
+    @jsProxyReflectable
+    @PolymerRegister('my-element')
+    class MyElement extends PolymerElement {
+      MyElement.created() : super.created() {
+        print('${localName}#$id was created');
       }
 
-    });
+      void attached() {
+        print('${localName}#$id was attached');
+      }
+
+      void detached() {
+        print('${localName}#$id was detached');
+      }
+
+      void attributeChanged(name, type) {
+        print('${localName}#$id attribute $name was changed to '
+            '${attributes[name]}');
+      }
+    }
 
 ### Ready callback and local DOM initialization {#ready-method} 
 
@@ -222,9 +162,9 @@ method called.
 Implement `ready` when it's necessary to manipulate an element's
 local DOM when the element is constructed.
 
-    ready: function() {
-      // access a local DOM element by ID using this.$
-      this.$.header.textContent = 'Hello!';
+    void ready() {
+      // access a local DOM element by ID using `$`
+      $['header'].text = 'Hello!'
     }
 
 **Note:** This example uses [Automatic node finding](local-dom.html#node-finding) to
@@ -235,15 +175,14 @@ Within a given tree, `ready` is generally called in _document order_, but you sh
 rely on the ordering of initialization callbacks between sibling elements, or between 
 a host element and its light DOM children.
 
-
 ### Initialization order {#initialization-order}
 
 The element's basic initialization order is:
 
-- `created` callback  
+- PolymerElement `created` constructor (the `super.created()` call).  
 - local DOM initialized 
 - `ready` callback
-- [`factoryImpl` callback](#custom-constructor)
+- Your custom element `created` constructor.
 - `attached` callback
 
 Note that the **initialization order may vary** depending on whether or not the
@@ -254,10 +193,10 @@ timing to be identical across browsers, except as noted below.
 
 For a given element:
 
-*   The `created` callback is always called before `ready`.
-*   The `ready` callback is always called before `attached`.
-*   The `ready` callback is called on any **local DOM children** before it's called
-    on the host element.
+*   The `ready` callback is always called before `created`.
+*   The `created` callback is always called before `attached`.
+*   The `ready` callback is called on any **local DOM children** before it's
+    called on the host element.
 
 This means that an element's **light DOM children** may be initialized **before or after** 
 the parent element, and an element's **siblings may become `ready` in any order**.
@@ -265,47 +204,41 @@ the parent element, and an element's **siblings may become `ready` in any order*
 For accessing sibling elements when an element initializes you can call `async` from inside
 the `attached` callback:
 
-    attached: function() {
-       this.async(function() {
-          // access sibling or parent elements here
-       });
+    void attached() {
+      async(() {
+        // access sibling or parent elements here
+      });
     }
 
-### Registration callback
-
-`Polymer.Base` also implements `registerCallback`, which is called by `Polymer()` 
-to allow `Polymer.Base` to supply a [layering system](experimental.html#feature-layering) 
-for Polymer features.
-
+**Dart note:**: In Polymer JS, the `ready` method will actually be called before
+the `created` constructor, but in dart it is the other way around. This is
+because it gets invokes as part of the `polymerCreated()` call inside of the
+`PolymerElement.created()` constructor, which runs before your custom element
+constructor.
 
 ## Static attributes on host {#host-attributes}
 
 If a custom elements needs HTML attributes set on it at create-time, these may
-be declared in a `hostAttributes` property on the prototype, where keys are the
-attribute name and values are the values to be assigned.  Values should
-typically be provided as strings, as HTML attributes can only be strings;
-however, the standard `serialize` method is used to convert values to strings,
-so `true` will serialize to an empty attribute, and `false` will result in no
-attribute set, and so forth (see [Attribute serialization](properties.html#attribute-serialization) for more
+be declared in a `hostAttributes` argument of the `PolymerRegister` annotation.
+This takes a const map where keys are the attribute name and values are the
+values to be assigned.  Values should typically be provided as strings, as HTML
+attributes can only be strings; however, the standard `serialize` method is used
+to convert values to strings, so `true` will serialize to an empty attribute,
+and `false` will result in no attribute set, and so forth (see
+[Attribute serialization](properties.html#attribute-serialization) for more
 details).
 
 Example:
 
-    <script>
-
-      Polymer({
-
-        is: 'x-custom',
-
-        hostAttributes: {
-          string-attribute: 'Value',
-          boolean-attribute: true
-          tabindex: 0
-        }
-
-      });
-
-    </script>
+    @jsProxyReflectable
+    @PolymerRegister('x-custom', hostAttributes: const {
+      'string-attribute': 'Value',
+      'boolean-attribute': true,
+      'tabindex': 0,
+    });
+    class XCustom extends PolymerElement {
+      XCustom.created() : super.created()
+    }
 
 Results in:
 
@@ -314,44 +247,9 @@ Results in:
 **Note:** The `class` attribute can't be configured using `hostAttributes`.
 {: .alert .alert-error }
 
-## Behaviors {#prototype-mixins}
+## Behaviors {#behaviors}
 
 Elements can share code in the form of _behaviors_, which can define 
 properties, lifecycle callbacks, event listeners, and other features.
 
 For more information, see [Behaviors](behaviors.html).
-
-## Class-style constructor {#element-constructor}
-
-If you want to set up your custom element's prototype chain but **not** register
-it immediately, you can use the  `Polymer.Class` function. `Polymer.Class` takes
-the same prototype argument as the `Polymer` function,  and sets up the
-prototype chain, but does _not_ register the element. Instead it  returns a
-constructor  that can be passed to `document.registerElement` to register your
-element with the browser, and after  which can be used to instantiate new
-instances of your element via code.
-
-If you want to define and register the custom element in one step, use the 
-[`Polymer` function](#register-element).
-
-Example:
-
-    var MyElement = Polymer.Class({
-
-      is: 'my-element',
-
-      // See below for lifecycle callbacks
-      created: function() {
-        this.textContent = 'My element!';
-      }
-
-    });
-
-    document.registerElement('my-element', MyElement);
-
-    // Equivalent:
-    var el1 = new MyElement();
-    var el2 = document.createElement('my-element');
-
-`Polymer.Class` is designed to provide similar ergonomics to a speculative future
-where an ES6 class may be defined and provided to `document.registerElement`. 

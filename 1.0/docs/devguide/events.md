@@ -10,13 +10,15 @@ subtitle: Developer guide
 
 ## Event listener setup {#event-listeners}
 
-Add event listeners to the host element by providing a 
-`listeners` object that maps events to event handler function names.
+Add event listeners to the host element by providing a `@Listen('event-name`)`
+annotation to any method.
 
-You can also add an event listener to any element in the `this.$` collection 
+You can also add an event listener to any element in the `$` collection 
 using the syntax <code><var>nodeId</var>.<var>eventName</var>.
 
 Example:
+
+`x_custom.html`:
 
     <dom-module id="x-custom">
 
@@ -28,32 +30,25 @@ Example:
         <div id="special">I am special!</div>
       </template>
 
-      <script>
-
-        Polymer({
-
-          is: 'x-custom',
-
-          listeners: {
-            'tap': 'regularTap',
-            'special.tap': 'specialTap'
-          },
-
-          regularTap: function(e) {
-            alert("Thank you for tapping");
-          },
-          
-          specialTap: function(e) {
-            alert("It was special tapping");
-          }
-
-        });
-
-      </script>
-
     </dom-module>
 
+`x_custom.dart`:
 
+    @jsProxyReflectable
+    @PolymerRegister('x-custom')
+    class XCustom extends PolymerElement {
+      XCustom.created() : super.created();
+      
+      @Listen('tap')
+      void regularTap(event, target) {
+        window.alert('Thank you for tapping');
+      }
+      
+      @Listen('special.tap')
+      void specialTap(event, target) {
+        window.alert('It was special tapping');
+      }
+    }
 
 
 
@@ -62,9 +57,12 @@ Example:
 To add event listeners to local-DOM children, use
 <code>on-<var>event</var></code>  annotations in your template. This often
 eliminates the need to give an element an `id` solely for  the purpose of
-binding an event listener.
+binding an event listener. For now you must also annotate the method with
+`@eventHandler` for technical reasons.
 
 Example:
+
+`x_custom.html`:
 
     <dom-module id="x-custom">
 
@@ -72,21 +70,20 @@ Example:
         <button on-click="handleClick">Kick Me</button>
       </template>
 
-      <script>
-
-        Polymer({
-
-          is: 'x-custom',
-
-          handleClick: function() {
-            alert('Ow!');
-          }
-
-        });
-
-      </script>
-
     </dom-module>
+    
+`x_custom.dart`:
+   
+    @jsProxyReflectable
+    @PolymerRegister('x-custom')
+    class XCustom extends PolymerElement {
+      XCustom.created() : super.created();
+      
+      @eventHandler
+      handleClick(event, target) {
+        window.alert('Ow!');
+      }
+    }
 
 Because the event name is specified using an HTML attribute, **the event name is always
 converted to lowercase**. This is because HTML attribute names are case 
@@ -149,6 +146,8 @@ and list of detail properties available on `event.detail` for each type:
 
 Example:
 
+`drag_me.html`:
+
     <dom-module id="drag-me">
 
       <style>
@@ -163,37 +162,35 @@ Example:
         <div id="dragme" on-track="handleTrack">{{message}}</div>
       </template>
 
-      <script>
-
-        Polymer({
-
-          is: 'drag-me',
-
-          handleTrack: function(e) {
-            switch(e.detail.state) {
-              case 'start':
-                this.message = 'Tracking started!';
-                break;
-              case 'track':
-                this.message = 'Tracking in progress... ' +
-                  e.detail.x + ', ' + e.detail.y;
-                break;
-              case 'end':
-                this.message = 'Tracking ended!';
-                break;
-            }
-          }
-
-        });
-
-      </script>
-
     </dom-module>
 
+`drag_me.dart`:
 
+    @jsProxyReflectable
+    @PolymerRegister('drag-me')
+    class DragMe extends PolymerElement {
+      DragMe.created() : super.created();
+      
+      @eventHandler
+      void handleTrack(e, _) {
+        switch(e.detail['state']) {
+          case 'start':
+            message = 'Tracking started!';
+            break;
+          case 'track':
+            message = 'Tracking in progress... ${e.detail.x}, ${e.detail.y}';
+            break;
+          case 'end':
+            message = 'Tracking ended!';
+            break;
+        }
+        notifyPath('message', message);
+      }
+    }
 
+Example with `@Listen`:
 
-Example with `listeners`:
+`drag_me.html`:
 
     <dom-module id="drag-me">
 
@@ -209,37 +206,31 @@ Example with `listeners`:
         <div id="dragme">{{message}}</div>
       </template>
 
-      <script>
-
-        Polymer({
-
-          is: 'drag-me',
-
-          listeners: {
-            'dragme.track': 'handleTrack'
-          },
-
-          handleTrack: function(e) {
-            switch(e.detail.state) {
-              case 'start':
-                this.message = 'Tracking started!';
-                break;
-              case 'track':
-                this.message = 'Tracking in progress... ' +
-                  e.detail.x + ', ' + e.detail.y;
-                break;
-              case 'end':
-                this.message = 'Tracking ended!';
-                break;
-            }
-          }
-
-        });
-
-      </script>
-
     </dom-module>
 
+`drag_me.dart`:
+
+    @jsProxyReflectable
+    @PolymerRegister('drag-me')
+    class DragMe extends PolymerElement {
+      DragMe.created() : super.created();
+      
+      @Listen('dragme.track')
+      void handleTrack(e, _) {
+        switch(e.detail['state']) {
+          case 'start':
+            message = 'Tracking started!';
+            break;
+          case 'track':
+            message = 'Tracking in progress... ${e.detail.x}, ${e.detail.y}';
+            break;
+          case 'end':
+            message = 'Tracking ended!';
+            break;
+        }
+        notifyPath('message', message);
+      }
+    }
 
 
 ## Event retargeting {#retargeting}
