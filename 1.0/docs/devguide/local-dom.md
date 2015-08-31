@@ -42,6 +42,7 @@ Example:
     </dom-module>
 
 `x_foo.dart`:
+
     @HtmlImport('x_foo.html')
     library x_foo;
     

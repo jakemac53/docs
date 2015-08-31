@@ -144,7 +144,7 @@ Example:
         print('${localName}#$id was detached');
       }
 
-      void attributeChanged(name, type) {
+      void attributeChanged(name, oldVal, newVal) {
         print('${localName}#$id attribute $name was changed to '
             '${attributes[name]}');
       }
@@ -235,9 +235,9 @@ Example:
       'string-attribute': 'Value',
       'boolean-attribute': true,
       'tabindex': 0,
-    });
+    })
     class XCustom extends PolymerElement {
-      XCustom.created() : super.created()
+      XCustom.created() : super.created();
     }
 
 Results in:

@@ -22,17 +22,17 @@ A basic {{site.project_title}} element definition looks like this:
 `element_name.html`:
 
     <dom-module id="element-name">
-
+    
       <style>
         /* CSS rules for your element */
       </style>
-      
+    
       <template>
         <!-- local DOM for your element -->
-
+    
         <div>{%raw%}{{greeting}}{%endraw%}</div> <!-- data bindings in local DOM -->
       </template>
-
+    
     </dom-module>
 
 `element_name.dart`:
@@ -44,7 +44,7 @@ A basic {{site.project_title}} element definition looks like this:
     import 'package:web_components/web_components.dart' show HtmlImport;
 
     @jsProxyReflectable
-    @PolymerRegister('element_name')
+    @PolymerRegister('element-name')
     class ElementName extends PolymerElement {
       ElementName.created() : super.created();
       

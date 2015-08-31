@@ -48,7 +48,7 @@ The `Property` object supports the following named arguments for each property:
 </tr>
 <tr>
 <td><code>reflectToAttribute</code></td>
-<td>Type: <code>boolean</code><br> 
+<td>Type: <code>bool</code><br> 
 
 Set to `true` to cause the corresponding attribute to be set on the host node
 when the property value changes. If the property type is `bool`, the attribute
@@ -61,7 +61,7 @@ more information.
 </tr>
 <tr>
 <td><code>notify</code></td>
-<td>Type: <code>boolean</code><br> 
+<td>Type: <code>bool</code><br> 
 
 If `true`, the property is available for two-way data binding. In addition, an
 event, <code><var>propertyName</var>-changed</code> is fired whenever the
@@ -71,7 +71,7 @@ for more information.
 </tr>
 <tr>
 <td><code>computed</code></td>
-<td>Type: <code>string</code><br>
+<td>Type: <code>String</code><br>
 
 The value is interpreted as a method name and argument list. The method is invoked
 to calculate the value whenever any of the argument values changes. Computed
@@ -81,7 +81,7 @@ properties should never be written to directly. See
 </tr>
 <tr>
 <td><code>observer</code></td>
-<td>Type: <code>string</code><br>
+<td>Type: <code>String</code><br>
 
 The value is interpreted as a method name to be invoked when the property value 
 changes. Note that unlike in 0.5, <strong>property change handlers must be registered 
@@ -137,16 +137,16 @@ Example:
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
-      
+    
       @property
       String user;
-      
+    
       @Property(notify: true)
       bool manager = false;
-      
+    
       attached() {
-        text = 'Hello World, my user is ${user == null : 'nobody' : user}.\n'
-            'This user is ${this.manager ? '' : 'not'} a manager.';
+        text = 'Hello World, my user is ${user == null ? 'nobody' : user}.\n'
+            'This user is ${manager ? '' : 'not'} a manager.';
       }
     }
     
@@ -199,27 +199,28 @@ Example:
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
-      
+    
       @Property(observer: 'disabledChanged')
       bool disabled;
-      
+    
       @Property(observer: 'highlightChanged')
-      var highlight;
- 
+      bool highlight;
+    
       @eventHandler
       void disabledChanged(newValue, oldValue) {
         toggleClass('disabled', newValue);
         set('highlight', true);
       }
-
+    
       @eventHandler
       void highlightChanged([_, __]) {
-        classList.add('highlight');
+        classes.add('highlight');
         async(() {
-          classList.remove('highlight');
-        }, 300);
+          classes.remove('highlight');
+        }, waitTime: 300);
       }
     }
+
     
 **Dart note:** You must also annotate each of the methods with @eventHandler in
 order to make them available via reflection.
@@ -320,15 +321,15 @@ Example:
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
-      
+    
       @property
       User user;
-      
+    
       @Observe('user.manager.*')
-      void userManagerChanged(JsObject changeRecord) {
+      void userManagerChanged(Map changeRecord) {
         if (changeRecord['path'] == 'user.manager') {
           // user.manager object itself changed
-          console.log('new manager name is ' + changeRecord['value'].name);
+          print('new manager name is ' + changeRecord['value'].name);
         } else {
           // sub-property of user.manager changed
           print('${changeRecord['path']} changed to ${changeRecord['value']}');
@@ -368,20 +369,20 @@ Example:
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
-      
+    
       @property
       List<User> users = [];
-      
       @Observe('users.splices')
-      void usersAddedOrRemoved(JsObject changeRecord) {
+      void usersAddedOrRemoved(Map changeRecord) {
+        if (changeRecord == null) return;
         changeRecord['indexSplices'].forEach((s) {
-          s.['removed'].forEach((user) {
-            print('${user.name was removed');
+          s['removed'].forEach((user) {
+            print('${user.name} was removed');
           });
           print('${s['addedCount']} users were added');
         });
       }
-
+    
       void addUser() {
         add('users', new User("Jack Aubrey"));
       }
@@ -407,7 +408,7 @@ that occur in the array:
       List<User> users = [];
       
       @Observe('users.*')
-      void usersChanged(JsObject changeRecord) {
+      void usersChanged(Map changeRecord) {
         if (changeRecord['path'] == 'users.splices') {
           // a user was added or removed
         } else {
@@ -505,6 +506,7 @@ changed, you must call `notifyPath('propertyName', value);`.
       String get myValue => _myValue;
       String _myValue;
       
+      @eventHandler
       someEventHandler() {
         _myValue = 'hello!';
         notifyPath('myValue', _myValue);
@@ -567,10 +569,10 @@ computed property function returns a value that's exposed as a virtual property.
       @property
       String last;
       
-      @Property(computed: 'computeFullName(first, last)');
+      @Property(computed: 'computeFullName(first, last)')
       String fullName;
       
-      @eventListener
+      @eventHandler
       String computeFullName(String first, String last) {
         return '$first $last';
       }

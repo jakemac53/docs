@@ -56,8 +56,7 @@ To define a behavior, create a new abstract class, and annotate it with
       highlightChanged(bool newValue, _) {
         toggleClass('highlighted', newValue);
       }
-
-    };
+    }
 
 `my_element.dart`:
 
@@ -93,7 +92,7 @@ If you would instead like to enforce that another behavior is mixed in after
 your behavior, you can create an `Impl` class, and add that to a dummy behavior
 class which just has an implements clause:
 
-    import 'oldbehavior.dart';
+    import 'old_behavior.dart';
     
     @behavior
     abstract class NewBehaviorImpl {

@@ -340,13 +340,14 @@ Example:
 
     <dom-module id="x-custom">
 
-      <style>
-        :host {
-          --my-toolbar-color: red;
-        }
-      </style>
-
       <template>
+
+        <style>
+          :host {
+            --my-toolbar-color: red;
+          }
+        </style>
+        
         <my-toolbar>My awesome app</my-toolbar>
         <button on-tap="changeTheme">Change theme</button>
       </template>

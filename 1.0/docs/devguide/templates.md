@@ -117,26 +117,35 @@ data is `model.item`:
 `simple_menu.dart`:
 
     @jsProxyReflectable
-    @PolymerRegister('simple_menu')
+    @PolymerRegister('simple-menu')
     class SimpleMenu extends PolymerElement {
       SimpleMenu.created() : super.created();
-      
+    
       @property
       List<MenuItem> menuItems;
-      
+    
       void ready() {
         set('menuItems', [
-          new MenuItem('Pizza', 0),
-          new MenuItem('Pasta', 0),
-          new MenuItem('Toast', 0),
+          new MenuItem('Pizza'),
+          new MenuItem('Pasta'),
+          new MenuItem('Toast'),
         ]);
       }
-      
+    
+      @eventHandler
       void order(e, [_]) {
         var model = new DomRepeatModel.fromEvent(e);
-        model.callMethod('set', ['item.ordered', model.item.ordered + 1]);
+        model.set('item.ordered', model.item.ordered + 1);
       }
     }
+    
+    @jsProxyReflectable
+    class MenuItem extends JsProxy {
+      String name;
+      int ordered = 0;
+      MenuItem(this.name);
+    }
+
 
 The `model` is an instance of the js `Polymer.Base` object, so `set`, `get` and
 the js array manipulation methods are all available on the `model` object, and
@@ -173,7 +182,7 @@ of `items` change, set the `observe` property to a space-separated list of
 
 For example, for a `dom-repeat` with a filter of the following:
 
-    isEngineer: function(item) {
+    isEngineer: (item) {
         return item.type == 'engineer' || item.manager.type == 'engineer';
     }
 
@@ -186,7 +195,7 @@ Then the `observe` property should be configured as follows:
 
 Changing a `manager.type` field should now cause the list to be re-sorted:
 
-    this.set('employees.0.manager.type', 'engineer');
+    set('employees.0.manager.type', 'engineer');
 
 ### Nesting dom-repeat templates {#nesting-templates}
 
@@ -266,23 +275,23 @@ item.  When `multi` is true, `selected` is an array of selected items.
     @PolymerRegister('employee-list')
     class EmployeeList extends PolymerElement {
       EmployeeList.created() : super.created();
-      
+    
       @property
       List<Employee> employees;
-      
+    
       void ready() {
         set('employees', [
-          new Employee('Bob', 'Smith');
-          new Employee('Sally', 'Johnson');
+          new Employee('Bob', 'Smith'),
+          new Employee('Sally', 'Johnson'),
         ]);
       }
-      
+    
       @eventHandler
       void toggleSelection(e, target) {
         // Have to use js interop to use this today, see
         // https://github.com/dart-lang/polymer_interop/issues/7
-        var item = $['employeeList'].callMethod('itemForElement', [e.target])
-        $['selector'].callMethod('select', [item]);
+        var item = $['employeeList'].itemForElement(e.target);
+        $['selector'].select(item);
       }
     }
     

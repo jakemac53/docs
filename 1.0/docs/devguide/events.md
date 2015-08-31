@@ -40,12 +40,12 @@ Example:
       XCustom.created() : super.created();
       
       @Listen('tap')
-      void regularTap(event, target) {
+      void regularTap(event, [_]) {
         window.alert('Thank you for tapping');
       }
       
       @Listen('special.tap')
-      void specialTap(event, target) {
+      void specialTap(event, [_]) {
         window.alert('It was special tapping');
       }
     }
@@ -80,7 +80,7 @@ Example:
       XCustom.created() : super.created();
       
       @eventHandler
-      handleClick(event, target) {
+      handleClick(event, [_]) {
         window.alert('Ow!');
       }
     }
@@ -170,15 +170,18 @@ Example:
     @PolymerRegister('drag-me')
     class DragMe extends PolymerElement {
       DragMe.created() : super.created();
-      
+    
+      @property
+      String message;
+    
       @eventHandler
-      void handleTrack(e, _) {
-        switch(e.detail['state']) {
+      void handleTrack(e, detail) {
+        switch(detail['state']) {
           case 'start':
             message = 'Tracking started!';
             break;
           case 'track':
-            message = 'Tracking in progress... ${e.detail.x}, ${e.detail.y}';
+            message = 'Tracking in progress... ${detail['x']}, ${detail['y']}';
             break;
           case 'end':
             message = 'Tracking ended!';
@@ -214,15 +217,18 @@ Example with `@Listen`:
     @PolymerRegister('drag-me')
     class DragMe extends PolymerElement {
       DragMe.created() : super.created();
-      
+    
+      @property
+      String message;
+    
       @Listen('dragme.track')
-      void handleTrack(e, _) {
-        switch(e.detail['state']) {
+      void handleTrack(e, detail) {
+        switch(detail['state']) {
           case 'start':
             message = 'Tracking started!';
             break;
           case 'track':
-            message = 'Tracking in progress... ${e.detail.x}, ${e.detail.y}';
+            message = 'Tracking in progress... ${detail['x']}, ${detail['y']}';
             break;
           case 'end':
             message = 'Tracking ended!';
@@ -231,7 +237,6 @@ Example with `@Listen`:
         notifyPath('message', message);
       }
     }
-
 
 ## Event retargeting {#retargeting}
 

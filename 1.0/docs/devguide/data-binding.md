@@ -80,7 +80,7 @@ the **entire content** of the tag:
 `user_view.dart`:
     
     @jsProxyReflectable
-    @PolymerElement('user-view')
+    @PolymerRegister('user-view')
     class UserView extends PolymerElement {
       UserView.created() : super.created();
       
@@ -116,7 +116,7 @@ Binding annotations can also include paths to sub-properties, as shown below:
     <dom-module id="main-view">
 
       <template>
-        {%raw%}<user-view first="{{user.first}}" last="{{user.last}}"></user-view>{%endraw%}
+        {%raw%}<user-view first-name="{{user.first}}" last-name="{{user.last}}"></user-view>{%endraw%}
       </template>
 
     </dom-module>
@@ -124,12 +124,19 @@ Binding annotations can also include paths to sub-properties, as shown below:
 `main_view.dart`:
     
     @jsProxyReflectable
-    @PolymerRegister('user-view')
+    @PolymerRegister('main-view')
     class MainView extends PolymerElement {
       MainView.created() : super.created();
       
       @property
       User user;
+    }
+    
+    @jsProxyReflectable
+    class User extends JsProxy {
+      String first;
+      String last;
+      User(this.first, this.last);
     }
 
 See [Binding to structured data](#path-binding) for details.
@@ -155,9 +162,9 @@ set to `true` (or otherwise send a `<property>-changed` custom event).  (If the
 property being bound does not have the `notify` flag set, only one-way
 (downward) binding will occur.)
 
-3. The child property being bound to must have a public setter.  (If the child
+3. The child property being bound to must have a public setter. If the child
 property is `notify: true`, only has a getter, and the host binding uses
-curly-brace syntax, the binding is one-way, **upward** (child-to-host).)
+curly-brace syntax, the binding is one-way, **upward** (child-to-host).
 
 Example 1: Two-way binding
 
@@ -566,7 +573,7 @@ Finally, if a computed binding has no dependent properties, it is only evaluated
       XCustom.created() : super.created();
 
       @eventHandler
-      int doThisOnce() => new Random().nextInt();
+      double doThisOnce() => new Random().nextDouble();
     }
 
 ## Binding to array items {#array-binding}
@@ -602,24 +609,23 @@ _or_ if the array  itself is mutated, so the binding uses a wildcard path, `myAr
     @PolymerRegister('bind-array-element')
     class BindArrayElement extends PolymerElement {
       BindArrayElement.created() : super.created();
-      
+    
       @property
       List myArray = [new User('Bob'), new User('Doug')];
-
+    
       // first argument is the change record for the array change,
       // change['base'] is the array specified in the binding
       @eventHandler
-      String arrayItem(JsObject change, int index, String path) {
-        // this.get(path, root) returns a value for a path
-        // relative to a root object.
-        return this.get(path, change['base'][index]);
-      },
-     
+      String arrayItem(Map change, int index, String path) {
+        // get(path, root) returns a value for a path relative to a root object.
+        return get(path, change['base'][index]);
+      }
+    
       void ready() {
         // mutate the array
-        this.unshift('myArray', new User('Susan'));
+        insert('myArray', 0, new User('Susan'));
         // change a subproperty
-        this.set('myArray.1.name', 'Rupert');
+        set('myArray.1.name', 'Rupert');
       }
     }
 
