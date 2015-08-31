@@ -133,11 +133,8 @@ data is `model.item`:
       }
       
       void order(e, [_]) {
-        // Have to use js interop to access this today, see
-        // https://github.com/dart-lang/polymer-dart/issues/563
-        var e = new JsObject.fromBrowserObject(e);
-        var model = e['model'];
-        model.callMethod('set', ['item.ordered', model['item']['ordered'] + 1]);
+        var model = new DomRepeatModel.fromEvent(e);
+        model.callMethod('set', ['item.ordered', model.item.ordered + 1]);
       }
     }
 

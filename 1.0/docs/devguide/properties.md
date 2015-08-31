@@ -493,7 +493,8 @@ When a property only "produces" data and never consumes data, this can be made
 explicit to avoid accidental changes from the host by defining only a getter
 for the field.  In order for the element to actually change the value of the
 property, it must use a private variable which holds the actual value,
-following normal dart semantics.
+following normal dart semantics. Then, to notify the system that the value has
+changed, you must call `notifyPath('propertyName', value);`.
 
     @jsProxyReflectable
     @PolymerRegister('my-element')
@@ -506,8 +507,13 @@ following normal dart semantics.
       
       someEventHandler() {
         _myValue = 'hello!';
+        notifyPath('myValue', _myValue);
       }
     }
+    
+**Dart Note:** In Polymer Js they create magic `_set{{PropertyName}}` functions,
+which set the value and call notifyPath. In dart we can't create these on the
+fly, so you have to manually call `notifyPath`.
 
 For more on read-only properties and data binding, see 
 [Property change notification and two-way binding](data-binding.html#property-notification).
