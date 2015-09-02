@@ -219,25 +219,27 @@ constructor.
 ## Static attributes on host {#host-attributes}
 
 If a custom elements needs HTML attributes set on it at create-time, these may
-be declared in a `hostAttributes` argument of the `PolymerRegister` annotation.
-This takes a const map where keys are the attribute name and values are the
-values to be assigned.  Values should typically be provided as strings, as HTML
-attributes can only be strings; however, the standard `serialize` method is used
-to convert values to strings, so `true` will serialize to an empty attribute,
-and `false` will result in no attribute set, and so forth (see
+be declared in a `hostAttributes` static field of your class. This takes a map
+where keys are the attribute name and values are the values to be assigned. 
+Values should typically be provided as strings, as HTML attributes can only be
+strings; however, the standard `serialize` method is used to convert values to
+strings, so `true` will serialize to an empty attribute, and `false` will result
+in no attribute set, and so forth (see
 [Attribute serialization](properties.html#attribute-serialization) for more
 details).
 
 Example:
 
     @jsProxyReflectable
-    @PolymerRegister('x-custom', hostAttributes: const {
-      'string-attribute': 'Value',
-      'boolean-attribute': true,
-      'tabindex': 0,
-    })
+    @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
+      
+      static const hostAttributes = const {
+        'string-attribute': 'Value',
+        'boolean-attribute': true,
+        'tabindex': 0,
+      };
     }
 
 Results in:

@@ -55,7 +55,7 @@ The Polymer micro layer provides bare-minimum Custom Element sugaring.
 | [Basic lifecycle callbacks](registering-elements.html#basic-callbacks) | created, attached, detached, attributeChanged
 | [Declared properties](properties.html#property-config) | @property String myProperty;
 | [Attribute deserialization to property](properties.html#attribute-deserialization) | <my-element my-property="bar"></myelement
-| [Static attributes on host](registering-elements.html#host-attributes) | @PolymerRegister( … , hostAttributes: const { \<attribute>: \<value> })
+| [Static attributes on host](registering-elements.html#host-attributes) | static final hostAttributes = { \<attribute>: \<value> };)
 | [Behaviors](behaviors.html) | class MyElement extends PolymerElement with MyBehavior { … }
 
 
