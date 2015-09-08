@@ -49,7 +49,6 @@ Example:
     import 'package:polymer/polymer.dart';
     import 'package:web_components/web_components.dart';
 
-    @jsProxyReflectable
     @PolymerRegister('x-foo')
     class XFoo extends PolymerElement { ... }
 
@@ -99,7 +98,6 @@ Example:
 
 `x_custom.dart`:
   
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();

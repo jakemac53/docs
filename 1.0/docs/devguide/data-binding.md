@@ -79,7 +79,6 @@ the **entire content** of the tag:
     
 `user_view.dart`:
     
-    @jsProxyReflectable
     @PolymerRegister('user-view')
     class UserView extends PolymerElement {
       UserView.created() : super.created();
@@ -123,7 +122,6 @@ Binding annotations can also include paths to sub-properties, as shown below:
     
 `main_view.dart`:
     
-    @jsProxyReflectable
     @PolymerRegister('main-view')
     class MainView extends PolymerElement {
       MainView.created() : super.created();
@@ -132,7 +130,6 @@ Binding annotations can also include paths to sub-properties, as shown below:
       User user;
     }
     
-    @jsProxyReflectable
     class User extends JsProxy {
       String first;
       String last;
@@ -170,7 +167,6 @@ Example 1: Two-way binding
 
 `custom_element.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('custom-element')
     class CustomElement extends PolymerElement {
       CustomElement.created() : super.created();
@@ -189,7 +185,6 @@ Example 2: One-way binding (downward)
 
 `custom_element.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('custom-element')
     class CustomElement extends PolymerElement {
       CustomElement.created() : super.created();
@@ -208,7 +203,6 @@ Example 3: One-way binding (downward)
 
 `custom_element.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('custom-element')
     class CustomElement extends PolymerElement {
       CustomElement.created() : super.created();
@@ -227,7 +221,6 @@ Example 4: One-way binding (upward, child-to-host)
 
 `custom_element.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('custom-element')
     class CustomElement extends PolymerElement {
       CustomElement.created() : super.created();
@@ -248,7 +241,6 @@ Example 5: Error / non-sensical state
 
 `custom_element.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('custom-element')
     class CustomElement extends PolymerElement {
       CustomElement.created() : super.created();
@@ -420,7 +412,6 @@ Example:
 
 `custom_element.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('custom-element')
     class CustomElement extends PolymerElement {
       CustomElement.created() : super.created();
@@ -493,7 +484,6 @@ Example:
 
 `x_custom.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -567,7 +557,6 @@ Finally, if a computed binding has no dependent properties, it is only evaluated
 
     import 'dart:math';
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -605,7 +594,6 @@ _or_ if the array  itself is mutated, so the binding uses a wildcard path, `myAr
     
 `bind_array_element.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('bind-array-element')
     class BindArrayElement extends PolymerElement {
       BindArrayElement.created() : super.created();

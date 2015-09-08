@@ -25,7 +25,6 @@ In addition, the `Property` annotation can be used to specify:
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created():
@@ -133,7 +132,6 @@ Example:
 
 `x_custom.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -164,7 +162,6 @@ case should be used in the attribute name.  Example:
 
 `x_custom.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -195,7 +192,6 @@ new and old values as arguments.
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -248,7 +244,6 @@ These observers differ from single-property observers in a few ways:
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -279,7 +274,6 @@ as a function argument.
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -317,7 +311,6 @@ observer is a change record object with the following properties:
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -365,7 +358,6 @@ change records with the following properties:
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -399,7 +391,6 @@ well as array element sub-property changes.  So the  observer in the
 following example will be called for all additions, removals, and deep changes
 that occur in the array:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -463,7 +454,6 @@ Example:
 
 `custom_element.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('custom-element')
     class CustomElement extends PolymerElement {
       CustomElement.created() : super.created();
@@ -497,7 +487,6 @@ property, it must use a private variable which holds the actual value,
 following normal dart semantics. Then, to notify the system that the value has
 changed, you must call `notifyPath('propertyName', value);`.
 
-    @jsProxyReflectable
     @PolymerRegister('my-element')
     class MyElement extends PolymerElement {
       MyElement.created() : super.created();
@@ -558,7 +547,6 @@ computed property function returns a value that's exposed as a virtual property.
 
 `x_custom.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -596,7 +584,6 @@ a property value.  This may be achieved by setting `reflectToAttribute: true` on
 a property in the `Property` annotation object.  This will cause any change
 to the property to be serialized out to an attribute of the same name.
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();

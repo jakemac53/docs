@@ -43,7 +43,6 @@ A basic {{site.project_title}} element definition looks like this:
     import 'package:polymer/polymer.dart';
     import 'package:web_components/web_components.dart' show HtmlImport;
 
-    @jsProxyReflectable
     @PolymerRegister('element-name')
     class ElementName extends PolymerElement {
       ElementName.created() : super.created();

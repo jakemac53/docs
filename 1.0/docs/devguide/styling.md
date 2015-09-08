@@ -356,7 +356,6 @@ Example:
     
 `x_custom.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();

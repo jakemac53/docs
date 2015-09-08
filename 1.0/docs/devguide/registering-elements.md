@@ -24,7 +24,6 @@ find all the annotations and do the actual registration.
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('my-element')
     class MyElement extends PolymerElement {
       MyElement.created() : super.created();
@@ -56,7 +55,6 @@ if desired.
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('my-element')
     class MyElement extends PolymerElement {
       MyElement.created() : super.created();
@@ -86,7 +84,6 @@ future.
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('my-input', extendsTag: 'input')
     class MyInput extends InputElement with
         PolymerMixin, PolymerBase, JsProxy {
@@ -129,7 +126,6 @@ finished creating and initializing the element's local DOM. I
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('my-element')
     class MyElement extends PolymerElement {
       MyElement.created() : super.created() {
@@ -230,7 +226,6 @@ details).
 
 Example:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();

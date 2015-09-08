@@ -19,7 +19,6 @@ properties](properties.html), [default attributes](registering-elements.html#hos
 To add a behavior to a {{site.project_title}} element definition, include it as
 a mixin on your element class.
 
-    @jsProxyReflectable
     @PolymerRegister('super-element')
     class SuperElement extends PolymerElement with SuperBehavior {
       SuperElement.created() : super.created();
@@ -62,7 +61,6 @@ To define a behavior, create a new abstract class, and annotate it with
 
     import 'highlight_behavior.dart';
 
-    @jsProxyReflectable
     @PolymerRegister('my-element')
     class MyElement extends PolymerElement with HighlightBehavior {
       MyElement.created() : super.created();
@@ -82,7 +80,6 @@ mixin list of any polymer element.
 
 This would enforce the following ordering:
 
-    @jsProxyReflectable
     @PolymerRegister('my-element')
     class MyElement extends PolymerElement with OldBehavior, NewBehavior {
       MyElement.created() : super.created();
@@ -106,7 +103,6 @@ class which just has an implements clause:
     
 This would enforce the following ordering:
 
-    @jsProxyReflectable
     @PolymerRegister('my-element')
     class MyElement extends PolymerElement with
         NewBehaviorImpl, OldBehavior, NewBehavior {

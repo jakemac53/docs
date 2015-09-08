@@ -52,7 +52,6 @@ Example:
     
 `employee_list.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('employee-list')
     class EmployeeList extends PolymerElement {
       EmployeeList.created() : super.created();
@@ -68,7 +67,6 @@ Example:
       }
     }
     
-    @jsProxyReflectable
     class Employee extends JsProxy {
       String first;
       String last;
@@ -116,7 +114,6 @@ data is `model.item`:
     
 `simple_menu.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('simple-menu')
     class SimpleMenu extends PolymerElement {
       SimpleMenu.created() : super.created();
@@ -139,7 +136,6 @@ data is `model.item`:
       }
     }
     
-    @jsProxyReflectable
     class MenuItem extends JsProxy {
       String name;
       int ordered = 0;
@@ -271,7 +267,6 @@ item.  When `multi` is true, `selected` is an array of selected items.
     
 `employee_list.dart`:
     
-    @jsProxyReflectable
     @PolymerRegister('employee-list')
     class EmployeeList extends PolymerElement {
       EmployeeList.created() : super.created();
@@ -295,7 +290,6 @@ item.  When `multi` is true, `selected` is an array of selected items.
       }
     }
     
-    @jsProxyReflectable
     class Employee extends JsProxy {
       String first;
       String last;
@@ -344,7 +338,6 @@ Example:
 
 `user_page.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('user-page')
     class UserPage extends PolymerElement {
       UserPage.created() : super.created();

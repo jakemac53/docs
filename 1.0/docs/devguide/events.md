@@ -34,7 +34,6 @@ Example:
 
 `x_custom.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -74,7 +73,6 @@ Example:
     
 `x_custom.dart`:
    
-    @jsProxyReflectable
     @PolymerRegister('x-custom')
     class XCustom extends PolymerElement {
       XCustom.created() : super.created();
@@ -166,7 +164,6 @@ Example:
 
 `drag_me.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('drag-me')
     class DragMe extends PolymerElement {
       DragMe.created() : super.created();
@@ -213,7 +210,6 @@ Example with `@Listen`:
 
 `drag_me.dart`:
 
-    @jsProxyReflectable
     @PolymerRegister('drag-me')
     class DragMe extends PolymerElement {
       DragMe.created() : super.created();
